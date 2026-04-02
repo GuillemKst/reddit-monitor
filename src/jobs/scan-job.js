@@ -27,6 +27,8 @@ async function processNewPosts(rawPosts, keywords, minScore) {
   const newPosts = await filterNewPosts(rawPosts);
   let matched = 0;
   let notified = 0;
+  let dismissed = 0;
+  const dismissThreshold = Math.max(20, minScore - 20);
 
   for (const rawPost of newPosts) {
     const text = `${rawPost.title} ${rawPost.selftext}`;
@@ -36,11 +38,18 @@ async function processNewPosts(rawPosts, keywords, minScore) {
 
     const relevanceScore = calculateRelevanceScore(rawPost, matches);
 
+    if (relevanceScore < dismissThreshold) {
+      dismissed++;
+      continue;
+    }
+
+    const status = relevanceScore >= minScore ? 'new' : 'seen';
+
     const savedPost = await Post.create({
       ...rawPost,
       matchedKeywords: matches.map((k) => k.phrase),
       relevanceScore,
-      status: 'new',
+      status,
     });
 
     await Keyword.updateMany(
@@ -54,7 +63,7 @@ async function processNewPosts(rawPosts, keywords, minScore) {
     }
   }
 
-  return { newCount: newPosts.length, matched, notified };
+  return { newCount: newPosts.length, matched, notified, dismissed };
 }
 
 async function runScan() {
@@ -76,7 +85,7 @@ async function runScan() {
     }
 
     const targetSubreddits = getSubredditsForCycle(scanCount);
-    const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '40');
+    const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '50');
     const useSearch = !!process.env.REDDIT_CLIENT_ID;
 
     let totalFound = 0;

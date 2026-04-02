@@ -10,7 +10,11 @@
     "build": "cd client && npm install && npm run build",
     "seed": "node -e \"require('dotenv').config(); const m=require('mongoose'); const K=require('./src/models/Keyword'); const d=require('./src/config/keywords'); (async()=>{await m.connect(process.env.MONGODB_URI);let s=0;for(const k of d){const e=await K.findOne({phrase:k.phrase.toLowerCase()});if(!e){await K.create({phrase:k.phrase.toLowerCase(),category:k.category,priority:k.priority,isActive:true});s++}}console.log(s+' seeded');await m.disconnect()})();\""
   },
-  "keywords": ["reddit", "monitor", "social-listening"],
+  "keywords": [
+    "reddit",
+    "monitor",
+    "social-listening"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Reddit monitoring tool for SaaS social listening",
