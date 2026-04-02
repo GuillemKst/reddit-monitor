@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 
 const PULLPUSH_BASE = 'https://api.pullpush.io';
 
-function parseRedditPost(d) {
+function parsePost(d) {
   return {
     redditId: d.id,
     title: d.title || '',
@@ -22,7 +22,7 @@ function parseRedditPost(d) {
 async function getNewPostsMulti(subredditList, limit = 100) {
   const allPosts = [];
   const chunkSize = 10;
-  const hoursAgo = Math.floor(Date.now() / 1000) - (2 * 60 * 60);
+  const after = Math.floor(Date.now() / 1000) - (3 * 60 * 60);
 
   for (let i = 0; i < subredditList.length; i += chunkSize) {
     const chunk = subredditList.slice(i, i + chunkSize);
@@ -34,30 +34,26 @@ async function getNewPostsMulti(subredditList, limit = 100) {
       const response = await axios.get(`${PULLPUSH_BASE}/reddit/search/submission/`, {
         params: {
           subreddit: subredditParam,
-          after: hoursAgo,
+          after,
           size: Math.min(limit, 100),
-          sort: 'created_utc',
-          order: 'desc',
+          sort_type: 'created_utc',
+          sort: 'desc',
         },
         timeout: 20000,
-        headers: {
-          'User-Agent': 'RedditMonitor/1.0 (social listening tool)',
-        },
       });
 
-      const data = response.data?.data || response.data || [];
-      const posts = (Array.isArray(data) ? data : []).map(parseRedditPost);
+      const items = response.data?.data || [];
+      const posts = (Array.isArray(items) ? items : []).map(parsePost);
       allPosts.push(...posts);
       redditLimiter.reportSuccess();
-      logger.info(`PullPush: ${posts.length} posts from ${chunk.length} subs (${subredditParam.slice(0, 40)}...)`);
+      logger.info(`PullPush: ${posts.length} posts from [${subredditParam}]`);
     } catch (err) {
       redditLimiter.reportError();
-      const status = err.response?.status;
-      if (status === 429) {
-        logger.warn('PullPush rate limited, waiting...');
+      if (err.response?.status === 429) {
+        logger.warn('PullPush rate limited, waiting 10s...');
         await new Promise((r) => setTimeout(r, 10000));
       } else {
-        logger.error(`PullPush fetch error (${status}):`, err.message);
+        logger.error(`PullPush error (${err.response?.status}): ${err.message}`);
       }
     }
 
@@ -73,7 +69,7 @@ async function getNewPostsMulti(subredditList, limit = 100) {
 async function searchMultiSubreddit(subredditList, keyword, options = {}) {
   const { limit = 50 } = options;
   const subredditParam = subredditList.join(',');
-  const hoursAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+  const after = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
 
   await redditLimiter.wait();
 
@@ -82,25 +78,22 @@ async function searchMultiSubreddit(subredditList, keyword, options = {}) {
       params: {
         subreddit: subredditParam,
         q: keyword,
-        after: hoursAgo,
+        after,
         size: limit,
-        sort: 'created_utc',
-        order: 'desc',
+        sort_type: 'created_utc',
+        sort: 'desc',
       },
       timeout: 20000,
-      headers: {
-        'User-Agent': 'RedditMonitor/1.0 (social listening tool)',
-      },
     });
 
-    const data = response.data?.data || response.data || [];
-    const posts = (Array.isArray(data) ? data : []).map(parseRedditPost);
+    const items = response.data?.data || [];
+    const posts = (Array.isArray(items) ? items : []).map(parsePost);
     redditLimiter.reportSuccess();
     logger.debug(`PullPush search "${keyword.slice(0, 30)}": ${posts.length} results`);
     return posts;
   } catch (err) {
     redditLimiter.reportError();
-    logger.error(`PullPush search error for "${keyword}":`, err.message);
+    logger.error(`PullPush search error: ${err.message}`);
     return [];
   }
 }
