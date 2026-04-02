@@ -14,7 +14,7 @@ export default function Dashboard() {
   const [filters, setFilters] = useState({
     status: '',
     subreddit: '',
-    minScore: '',
+    minScore: '60',
     sort: '-relevanceScore',
   });
 
@@ -59,27 +59,25 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white tracking-tight">Dashboard</h1>
-          <p className="text-[13px] text-white/30 mt-0.5">
-            {pagination.total} opportunities detected
+          <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-neutral-400 mt-0.5">
+            {pagination.total} opportunities found
           </p>
         </div>
         <button
           onClick={handleTriggerScan}
           disabled={isScanning}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500/40 text-white text-[13px] font-medium px-4 py-2 rounded-lg transition-colors"
+          className="text-[13px] font-medium bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 text-white px-4 py-2 rounded-lg transition-colors"
         >
-          <svg className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {isScanning ? 'Scanning...' : 'Run Scan'}
+          {isScanning ? 'Scanning...' : 'Run scan'}
         </button>
       </div>
 
       <StatsOverview stats={stats} />
+
       <FilterBar
         filters={filters}
         subreddits={subreddits}
@@ -88,19 +86,14 @@ export default function Dashboard() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
         </div>
       ) : posts.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-12 h-12 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-3">
-            <svg className="w-5 h-5 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-          </div>
-          <p className="text-[13px] text-white/30">No posts match your filters</p>
+          <p className="text-sm text-neutral-400">No posts match your filters</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="border border-neutral-100 rounded-xl px-5">
           {posts.map((post) => (
             <CardPost key={post._id} post={post} onStatusChange={handleStatusChange} />
           ))}
@@ -108,55 +101,50 @@ export default function Dashboard() {
       )}
 
       {pagination.pages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex items-center justify-center gap-4 pt-2">
           <button
             onClick={() => setPagination((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
             disabled={pagination.page <= 1}
-            className="text-xs text-white/40 hover:text-white/70 disabled:text-white/10 transition-colors"
+            className="text-[13px] text-neutral-400 hover:text-neutral-900 disabled:text-neutral-200 transition-colors"
           >
-            ← Prev
+            ← Previous
           </button>
-          <span className="text-xs text-white/20 tabular-nums">
+          <span className="text-[13px] text-neutral-300 tabular-nums">
             {pagination.page} / {pagination.pages}
           </span>
           <button
             onClick={() => setPagination((p) => ({ ...p, page: Math.min(p.pages, p.page + 1) }))}
             disabled={pagination.page >= pagination.pages}
-            className="text-xs text-white/40 hover:text-white/70 disabled:text-white/10 transition-colors"
+            className="text-[13px] text-neutral-400 hover:text-neutral-900 disabled:text-neutral-200 transition-colors"
           >
             Next →
           </button>
         </div>
       )}
 
-      {stats?.topSubreddits?.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">Top Subreddits</h3>
-            <div className="space-y-2.5">
-              {stats.topSubreddits.map((s, i) => (
-                <div key={s._id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-white/15 font-mono w-4">{i + 1}</span>
-                    <span className="text-xs text-white/60">r/{s._id}</span>
+      {(stats?.topSubreddits?.length > 0 || stats?.topKeywords?.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-100">
+          {stats?.topSubreddits?.length > 0 && (
+            <div>
+              <h3 className="text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Top subreddits</h3>
+              <div className="space-y-2">
+                {stats.topSubreddits.map((s) => (
+                  <div key={s._id} className="flex items-center justify-between">
+                    <span className="text-[13px] text-neutral-600">r/{s._id}</span>
+                    <span className="text-[13px] text-neutral-300 tabular-nums">{s.count}</span>
                   </div>
-                  <span className="text-[11px] font-medium text-white/30 tabular-nums">{s.count}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-
+          )}
           {stats?.topKeywords?.length > 0 && (
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-              <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">Top Keywords</h3>
-              <div className="space-y-2.5">
-                {stats.topKeywords.map((k, i) => (
+            <div>
+              <h3 className="text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Top keywords</h3>
+              <div className="space-y-2">
+                {stats.topKeywords.map((k) => (
                   <div key={k._id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-white/15 font-mono w-4">{i + 1}</span>
-                      <span className="text-xs text-white/60">{k._id}</span>
-                    </div>
-                    <span className="text-[11px] font-medium text-white/30 tabular-nums">{k.count}</span>
+                    <span className="text-[13px] text-neutral-600">{k._id}</span>
+                    <span className="text-[13px] text-neutral-300 tabular-nums">{k.count}</span>
                   </div>
                 ))}
               </div>
