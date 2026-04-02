@@ -25,6 +25,48 @@ function matchKeywords(text, keywords) {
   return keywords.filter((kw) => lower.includes(kw.phrase));
 }
 
+async function processResults(posts, keywords, minScore) {
+  const newPosts = await filterNewPosts(posts);
+  let matched = 0;
+  let notified = 0;
+  let dismissed = 0;
+  const dismissThreshold = Math.max(20, minScore - 20);
+
+  for (const rawPost of newPosts) {
+    const text = `${rawPost.title} ${rawPost.selftext}`;
+    const matches = matchKeywords(text, keywords);
+    if (!matches.length) continue;
+    matched++;
+
+    const relevanceScore = calculateRelevanceScore(rawPost, matches);
+
+    if (relevanceScore < dismissThreshold) {
+      dismissed++;
+      continue;
+    }
+
+    const status = relevanceScore >= minScore ? 'new' : 'seen';
+    const savedPost = await Post.create({
+      ...rawPost,
+      matchedKeywords: matches.map((k) => k.phrase),
+      relevanceScore,
+      status,
+    });
+
+    await Keyword.updateMany(
+      { phrase: { $in: matches.map((k) => k.phrase) } },
+      { $inc: { matchCount: 1 } }
+    );
+
+    if (relevanceScore >= minScore) {
+      await notifyPost(savedPost);
+      notified++;
+    }
+  }
+
+  return { newCount: newPosts.length, matched, notified, dismissed };
+}
+
 module.exports = async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -46,88 +88,16 @@ module.exports = async function handler(req, res) {
 
     const cycle = getCycleNumber();
     const targetSubreddits = getSubredditsForCycle(cycle);
-    const useSearch = !!process.env.REDDIT_CLIENT_ID;
-    const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '40');
+    const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '50');
 
-    let totalFound = 0;
-    let totalNew = 0;
-    let totalMatched = 0;
-    let totalNotified = 0;
-
-    if (useSearch) {
-      const highPriority = keywords.filter((k) => k.priority <= 2);
-      const batches = buildBatchQuery(highPriority, 5);
-
-      for (const batch of batches) {
-        const posts = await searchMultiSubreddit(targetSubreddits, batch.query, {
-          sort: 'new', limit: 50, timeFilter: 'day',
-        });
-        totalFound += posts.length;
-        const newPosts = await filterNewPosts(posts);
-        totalNew += newPosts.length;
-
-        for (const rawPost of newPosts) {
-          const text = `${rawPost.title} ${rawPost.selftext}`;
-          const matched = matchKeywords(text, keywords);
-          if (!matched.length) continue;
-          totalMatched++;
-
-          const relevanceScore = calculateRelevanceScore(rawPost, matched);
-          const savedPost = await Post.create({
-            ...rawPost,
-            matchedKeywords: matched.map((k) => k.phrase),
-            relevanceScore, status: 'new',
-          });
-
-          await Keyword.updateMany(
-            { phrase: { $in: matched.map((k) => k.phrase) } },
-            { $inc: { matchCount: 1 } }
-          );
-
-          if (relevanceScore >= minScore) {
-            await notifyPost(savedPost);
-            totalNotified++;
-          }
-        }
-      }
-    } else {
-      const posts = await getNewPostsMulti(targetSubreddits, 100);
-      totalFound = posts.length;
-      const newPosts = await filterNewPosts(posts);
-      totalNew = newPosts.length;
-
-      for (const rawPost of newPosts) {
-        const text = `${rawPost.title} ${rawPost.selftext}`;
-        const matched = matchKeywords(text, keywords);
-        if (!matched.length) continue;
-        totalMatched++;
-
-        const relevanceScore = calculateRelevanceScore(rawPost, matched);
-        const savedPost = await Post.create({
-          ...rawPost,
-          matchedKeywords: matched.map((k) => k.phrase),
-          relevanceScore, status: 'new',
-        });
-
-        await Keyword.updateMany(
-          { phrase: { $in: matched.map((k) => k.phrase) } },
-          { $inc: { matchCount: 1 } }
-        );
-
-        if (relevanceScore >= minScore) {
-          await notifyPost(savedPost);
-          totalNotified++;
-        }
-      }
-    }
+    const posts = await getNewPostsMulti(targetSubreddits, 100);
+    const results = await processResults(posts, keywords, minScore);
 
     res.json({
       message: 'Scan complete',
       subreddits: targetSubreddits.length,
-      fetched: totalFound,
-      new: totalNew,
-      matched: totalMatched,
-      notified: totalNotified,
+      fetched: posts.length,
+      ...results,
     });
   } catch (err) {
     console.error('Cron scan error:', err);
