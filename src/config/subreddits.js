@@ -1,39 +1,50 @@
 const subreddits = {
   tier1: [
+    // Builders & SaaS — máxima relevancia
     'SaaS',
     'startups',
     'Entrepreneur',
+    'SideProject',
+    // Developers — buscan herramientas activamente
     'webdev',
     'programming',
-    'software',
+    'reactjs',
+    'javascript',
+  ],
+  tier2: [
+    // Product & Marketing
+    'ProductManagement',
+    'marketing',
+    'growthhacking',
+    'digital_marketing',
+    // Creators
+    'youtubers',
+    'contentcreation',
+    'videoediting',
+    // Productivity & Remote
     'productivity',
     'remotework',
   ],
-  tier2: [
-    'smallbusiness',
-    'freelance',
-    'digital_marketing',
-    'MacApps',
-    'windows',
-    'linux',
-    'WorkOnline',
-    'telecommuting',
-  ],
   tier3: [
+    // Más nicho pero valioso
     'DevTools',
     'selfhosted',
-    'SideProject',
+    'smallbusiness',
+    'freelance',
+    'NewTubers',
+    'MacApps',
+    'windows',
+    'software',
     'AskTechnology',
     'techsupport',
-    'youtubers',
-    'NewTubers',
   ],
 };
 
 function getSubredditTier(subredditName) {
-  if (subreddits.tier1.includes(subredditName)) return 1;
-  if (subreddits.tier2.includes(subredditName)) return 2;
-  if (subreddits.tier3.includes(subredditName)) return 3;
+  const lower = subredditName.toLowerCase();
+  if (subreddits.tier1.some((s) => s.toLowerCase() === lower)) return 1;
+  if (subreddits.tier2.some((s) => s.toLowerCase() === lower)) return 2;
+  if (subreddits.tier3.some((s) => s.toLowerCase() === lower)) return 3;
   return 3;
 }
 
