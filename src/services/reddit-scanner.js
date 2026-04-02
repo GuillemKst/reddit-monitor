@@ -19,83 +19,83 @@ function parsePost(d) {
   };
 }
 
+async function fetchSubreddit(subreddit, after, size = 25) {
+  await redditLimiter.wait();
+
+  const response = await axios.get(`${PULLPUSH_BASE}/reddit/search/submission/`, {
+    params: {
+      subreddit,
+      after,
+      size,
+      sort_type: 'created_utc',
+      sort: 'desc',
+    },
+    timeout: 15000,
+  });
+
+  const items = response.data?.data || [];
+  return Array.isArray(items) ? items.map(parsePost) : [];
+}
+
 async function getNewPostsMulti(subredditList, limit = 100) {
   const allPosts = [];
-  const chunkSize = 10;
   const after = Math.floor(Date.now() / 1000) - (3 * 60 * 60);
+  const perSub = Math.min(Math.ceil(limit / subredditList.length), 50);
 
-  for (let i = 0; i < subredditList.length; i += chunkSize) {
-    const chunk = subredditList.slice(i, i + chunkSize);
-    const subredditParam = chunk.join(',');
-
-    await redditLimiter.wait();
-
+  for (const sub of subredditList) {
     try {
-      const response = await axios.get(`${PULLPUSH_BASE}/reddit/search/submission/`, {
-        params: {
-          subreddit: subredditParam,
-          after,
-          size: Math.min(limit, 100),
-          sort_type: 'created_utc',
-          sort: 'desc',
-        },
-        timeout: 20000,
-      });
-
-      const items = response.data?.data || [];
-      const posts = (Array.isArray(items) ? items : []).map(parsePost);
+      const posts = await fetchSubreddit(sub, after, perSub);
       allPosts.push(...posts);
       redditLimiter.reportSuccess();
-      logger.info(`PullPush: ${posts.length} posts from [${subredditParam}]`);
+      if (posts.length > 0) {
+        logger.info(`r/${sub}: ${posts.length} posts`);
+      }
     } catch (err) {
       redditLimiter.reportError();
       if (err.response?.status === 429) {
-        logger.warn('PullPush rate limited, waiting 10s...');
+        logger.warn(`PullPush rate limited on r/${sub}, waiting 10s...`);
         await new Promise((r) => setTimeout(r, 10000));
       } else {
-        logger.error(`PullPush error (${err.response?.status}): ${err.message}`);
+        logger.error(`r/${sub} error (${err.response?.status}): ${err.message}`);
       }
-    }
-
-    if (i + chunkSize < subredditList.length) {
-      await new Promise((r) => setTimeout(r, 1500));
     }
   }
 
-  logger.info(`PullPush total: ${allPosts.length} posts from ${subredditList.length} subreddits`);
+  logger.info(`Total: ${allPosts.length} posts from ${subredditList.length} subreddits`);
   return allPosts;
 }
 
 async function searchMultiSubreddit(subredditList, keyword, options = {}) {
   const { limit = 50 } = options;
-  const subredditParam = subredditList.join(',');
   const after = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+  const allPosts = [];
 
-  await redditLimiter.wait();
+  for (const sub of subredditList) {
+    await redditLimiter.wait();
+    try {
+      const response = await axios.get(`${PULLPUSH_BASE}/reddit/search/submission/`, {
+        params: {
+          subreddit: sub,
+          q: keyword,
+          after,
+          size: Math.min(limit, 25),
+          sort_type: 'created_utc',
+          sort: 'desc',
+        },
+        timeout: 15000,
+      });
 
-  try {
-    const response = await axios.get(`${PULLPUSH_BASE}/reddit/search/submission/`, {
-      params: {
-        subreddit: subredditParam,
-        q: keyword,
-        after,
-        size: limit,
-        sort_type: 'created_utc',
-        sort: 'desc',
-      },
-      timeout: 20000,
-    });
-
-    const items = response.data?.data || [];
-    const posts = (Array.isArray(items) ? items : []).map(parsePost);
-    redditLimiter.reportSuccess();
-    logger.debug(`PullPush search "${keyword.slice(0, 30)}": ${posts.length} results`);
-    return posts;
-  } catch (err) {
-    redditLimiter.reportError();
-    logger.error(`PullPush search error: ${err.message}`);
-    return [];
+      const items = response.data?.data || [];
+      const posts = Array.isArray(items) ? items.map(parsePost) : [];
+      allPosts.push(...posts);
+      redditLimiter.reportSuccess();
+    } catch (err) {
+      redditLimiter.reportError();
+      logger.error(`Search r/${sub} error: ${err.message}`);
+    }
   }
+
+  return allPosts;
 }
 
 function buildBatchQuery(keywords, batchSize = 5) {

@@ -31,6 +31,6 @@ class RateLimiter {
   }
 }
 
-const redditLimiter = new RateLimiter(1500);
+const redditLimiter = new RateLimiter(800);
 
 module.exports = { RateLimiter, redditLimiter };
