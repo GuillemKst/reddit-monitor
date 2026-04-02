@@ -5,7 +5,7 @@ export default function FilterBar({ filters, subreddits = [], onChange }) {
     onChange({ ...filters, [key]: value === 'all' ? '' : value });
   }
 
-  const selectClass = 'bg-white border border-neutral-200 text-neutral-600 text-[13px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-neutral-900/5 focus:border-neutral-300 appearance-none cursor-pointer';
+  const selectClass = 'bg-white border border-neutral-200 text-neutral-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-neutral-300 appearance-none cursor-pointer';
 
   return (
     <div className="flex flex-wrap items-center gap-3">

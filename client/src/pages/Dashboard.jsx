@@ -60,17 +60,17 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-neutral-400 mt-0.5">
+          <h1 className="text-3xl font-bold text-neutral-900">Dashboard</h1>
+          <p className="text-base text-neutral-400 mt-1">
             {pagination.total} opportunities found
           </p>
         </div>
         <button
           onClick={handleTriggerScan}
           disabled={isScanning}
-          className="text-[13px] font-medium bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 text-white px-4 py-2 rounded-lg transition-colors"
+          className="text-sm font-semibold bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-300 text-white px-6 py-3 rounded-xl transition-colors"
         >
           {isScanning ? 'Scanning...' : 'Run scan'}
         </button>
@@ -85,15 +85,16 @@ export default function Dashboard() {
       />
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-5 h-5 border-2 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
+        <div className="flex items-center justify-center py-24">
+          <div className="w-7 h-7 border-[3px] border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
         </div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-sm text-neutral-400">No posts match your filters</p>
+        <div className="text-center py-24 bg-white rounded-2xl border border-neutral-200">
+          <p className="text-lg text-neutral-400">No posts match your filters</p>
+          <p className="text-sm text-neutral-300 mt-1">Try lowering the minimum score or changing the status filter</p>
         </div>
       ) : (
-        <div className="border border-neutral-100 rounded-xl px-5">
+        <div className="space-y-3">
           {posts.map((post) => (
             <CardPost key={post._id} post={post} onStatusChange={handleStatusChange} />
           ))}
@@ -101,21 +102,21 @@ export default function Dashboard() {
       )}
 
       {pagination.pages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex items-center justify-center gap-6 pt-4">
           <button
             onClick={() => setPagination((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
             disabled={pagination.page <= 1}
-            className="text-[13px] text-neutral-400 hover:text-neutral-900 disabled:text-neutral-200 transition-colors"
+            className="text-sm font-medium text-neutral-500 hover:text-neutral-900 disabled:text-neutral-300 transition-colors"
           >
             ← Previous
           </button>
-          <span className="text-[13px] text-neutral-300 tabular-nums">
-            {pagination.page} / {pagination.pages}
+          <span className="text-sm text-neutral-400 tabular-nums font-medium">
+            Page {pagination.page} of {pagination.pages}
           </span>
           <button
             onClick={() => setPagination((p) => ({ ...p, page: Math.min(p.pages, p.page + 1) }))}
             disabled={pagination.page >= pagination.pages}
-            className="text-[13px] text-neutral-400 hover:text-neutral-900 disabled:text-neutral-200 transition-colors"
+            className="text-sm font-medium text-neutral-500 hover:text-neutral-900 disabled:text-neutral-300 transition-colors"
           >
             Next →
           </button>
@@ -123,28 +124,34 @@ export default function Dashboard() {
       )}
 
       {(stats?.topSubreddits?.length > 0 || stats?.topKeywords?.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
           {stats?.topSubreddits?.length > 0 && (
-            <div>
-              <h3 className="text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Top subreddits</h3>
-              <div className="space-y-2">
-                {stats.topSubreddits.map((s) => (
+            <div className="bg-white border border-neutral-200 rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-neutral-900 mb-5">Top subreddits</h3>
+              <div className="space-y-3">
+                {stats.topSubreddits.map((s, i) => (
                   <div key={s._id} className="flex items-center justify-between">
-                    <span className="text-[13px] text-neutral-600">r/{s._id}</span>
-                    <span className="text-[13px] text-neutral-300 tabular-nums">{s.count}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-neutral-300 font-mono w-5 text-right">{i + 1}</span>
+                      <span className="text-sm font-medium text-neutral-700">r/{s._id}</span>
+                    </div>
+                    <span className="text-sm text-neutral-400 tabular-nums font-medium">{s.count}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
           {stats?.topKeywords?.length > 0 && (
-            <div>
-              <h3 className="text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-4">Top keywords</h3>
-              <div className="space-y-2">
-                {stats.topKeywords.map((k) => (
+            <div className="bg-white border border-neutral-200 rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-neutral-900 mb-5">Top keywords</h3>
+              <div className="space-y-3">
+                {stats.topKeywords.map((k, i) => (
                   <div key={k._id} className="flex items-center justify-between">
-                    <span className="text-[13px] text-neutral-600">{k._id}</span>
-                    <span className="text-[13px] text-neutral-300 tabular-nums">{k.count}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-neutral-300 font-mono w-5 text-right">{i + 1}</span>
+                      <span className="text-sm font-medium text-neutral-700">{k._id}</span>
+                    </div>
+                    <span className="text-sm text-neutral-400 tabular-nums font-medium">{k.count}</span>
                   </div>
                 ))}
               </div>
