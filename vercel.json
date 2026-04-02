@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    { "source": "/api/cron/scan", "destination": "/api/cron/scan" },
+    { "source": "/api/(.*)", "destination": "/api" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/scan",
+      "schedule": "*/10 * * * *"
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    },
+    "api/cron/scan.js": {
+      "maxDuration": 60
+    }
+  }
+}

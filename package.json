@@ -1,0 +1,30 @@
+{
+  "name": "reddit-monitor",
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "client": "cd client && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run client\"",
+    "build": "cd client && npm install && npm run build",
+    "seed": "node -e \"require('dotenv').config(); const m=require('mongoose'); const K=require('./src/models/Keyword'); const d=require('./src/config/keywords'); (async()=>{await m.connect(process.env.MONGODB_URI);let s=0;for(const k of d){const e=await K.findOne({phrase:k.phrase.toLowerCase()});if(!e){await K.create({phrase:k.phrase.toLowerCase(),category:k.category,priority:k.priority,isActive:true});s++}}console.log(s+' seeded');await m.disconnect()})();\""
+  },
+  "keywords": ["reddit", "monitor", "social-listening"],
+  "author": "",
+  "license": "ISC",
+  "description": "Reddit monitoring tool for SaaS social listening",
+  "dependencies": {
+    "axios": "^1.14.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "mongoose": "^9.3.3",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
