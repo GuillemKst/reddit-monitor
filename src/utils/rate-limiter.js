@@ -31,7 +31,6 @@ class RateLimiter {
   }
 }
 
-const isOAuth = !!process.env.REDDIT_CLIENT_ID;
-const redditLimiter = new RateLimiter(isOAuth ? 1200 : 6000);
+const redditLimiter = new RateLimiter(1500);
 
 module.exports = { RateLimiter, redditLimiter };
