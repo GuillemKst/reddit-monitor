@@ -31,8 +31,6 @@ class RateLimiter {
   }
 }
 
-const redditLimiter = new RateLimiter(
-  process.env.REDDIT_CLIENT_ID ? 700 : 2000
-);
+const redditLimiter = new RateLimiter(500);
 
 module.exports = { RateLimiter, redditLimiter };
