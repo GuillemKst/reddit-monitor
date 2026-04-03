@@ -109,7 +109,7 @@ async function runScan() {
         totalNotified += result.notified;
       }
     } else {
-      logger.info(`No-auth mode: fetching new posts from ${targetSubreddits.length} subs (1 request)`);
+      logger.info(`No-auth mode: fetching new posts from ${targetSubreddits.length} subs`);
       const posts = await getNewPostsMulti(targetSubreddits, 100);
       totalFound = posts.length;
       const result = await processNewPosts(posts, keywords, minScore);

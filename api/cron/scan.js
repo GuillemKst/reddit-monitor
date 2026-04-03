@@ -89,15 +89,47 @@ module.exports = async function handler(req, res) {
     const cycle = getCycleNumber();
     const targetSubreddits = getSubredditsForCycle(cycle);
     const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '50');
+    const useSearch = !!process.env.REDDIT_CLIENT_ID;
 
-    const posts = await getNewPostsMulti(targetSubreddits, 100);
-    const results = await processResults(posts, keywords, minScore);
+    let totalFound = 0;
+    let totalNew = 0;
+    let totalMatched = 0;
+    let totalNotified = 0;
+    let totalDismissed = 0;
+
+    if (useSearch) {
+      const highPriority = keywords.filter((k) => k.priority <= 2);
+      const batches = buildBatchQuery(highPriority, 5);
+
+      for (const batch of batches) {
+        const posts = await searchMultiSubreddit(targetSubreddits, batch.query, {
+          limit: 50, timeFilter: 'day',
+        });
+        totalFound += posts.length;
+        const result = await processResults(posts, keywords, minScore);
+        totalNew += result.newCount;
+        totalMatched += result.matched;
+        totalNotified += result.notified;
+        totalDismissed += result.dismissed;
+      }
+    } else {
+      const posts = await getNewPostsMulti(targetSubreddits, 100);
+      totalFound = posts.length;
+      const result = await processResults(posts, keywords, minScore);
+      totalNew = result.newCount;
+      totalMatched = result.matched;
+      totalNotified = result.notified;
+      totalDismissed = result.dismissed;
+    }
 
     res.json({
       message: 'Scan complete',
       subreddits: targetSubreddits.length,
-      fetched: posts.length,
-      ...results,
+      fetched: totalFound,
+      newCount: totalNew,
+      matched: totalMatched,
+      notified: totalNotified,
+      dismissed: totalDismissed,
     });
   } catch (err) {
     console.error('Cron scan error:', err);
