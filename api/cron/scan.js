@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const { getNewPostsMulti, searchMultiSubreddit, buildBatchQuery } = require('../../src/services/reddit-scanner');
+const { getNewPostsMulti } = require('../../src/services/reddit-scanner');
 const { filterNewPosts } = require('../../src/services/deduplicator');
 const { calculateRelevanceScore } = require('../../src/services/relevance-scorer');
 const { notifyPost } = require('../../src/services/notifier');
@@ -89,7 +89,6 @@ module.exports = async function handler(req, res) {
     const cycle = getCycleNumber();
     const targetSubreddits = getSubredditsForCycle(cycle);
     const minScore = parseInt(process.env.MIN_RELEVANCE_SCORE || '50');
-    const useSearch = !!process.env.REDDIT_CLIENT_ID;
 
     let totalFound = 0;
     let totalNew = 0;
@@ -97,30 +96,18 @@ module.exports = async function handler(req, res) {
     let totalNotified = 0;
     let totalDismissed = 0;
 
-    if (useSearch) {
-      const highPriority = keywords.filter((k) => k.priority <= 2);
-      const batches = buildBatchQuery(highPriority, 5);
+    const posts = await getNewPostsMulti(targetSubreddits, 250);
+    totalFound = posts.length;
 
-      for (const batch of batches) {
-        const posts = await searchMultiSubreddit(targetSubreddits, batch.query, {
-          limit: 50, timeFilter: 'day',
-        });
-        totalFound += posts.length;
-        const result = await processResults(posts, keywords, minScore);
-        totalNew += result.newCount;
-        totalMatched += result.matched;
-        totalNotified += result.notified;
-        totalDismissed += result.dismissed;
-      }
-    } else {
-      const posts = await getNewPostsMulti(targetSubreddits, 100);
-      totalFound = posts.length;
-      const result = await processResults(posts, keywords, minScore);
-      totalNew = result.newCount;
-      totalMatched = result.matched;
-      totalNotified = result.notified;
-      totalDismissed = result.dismissed;
-    }
+    console.log(`Fetched ${totalFound} posts, processing against ${keywords.length} keywords...`);
+
+    const result = await processResults(posts, keywords, minScore);
+    totalNew = result.newCount;
+    totalMatched = result.matched;
+    totalNotified = result.notified;
+    totalDismissed = result.dismissed;
+
+    console.log(`Results: ${totalNew} new, ${totalMatched} matched, ${totalNotified} notified, ${totalDismissed} dismissed`);
 
     res.json({
       message: 'Scan complete',

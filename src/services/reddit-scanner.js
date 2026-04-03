@@ -39,7 +39,7 @@ async function fetchSubreddit(subreddit, after, limit = 25) {
 async function getNewPostsMulti(subredditList, limit = 100) {
   const allPosts = [];
   const after = Math.floor(Date.now() / 1000) - (3 * 60 * 60);
-  const perSub = Math.min(Math.ceil(limit / subredditList.length), 50);
+  const perSub = Math.min(Math.max(Math.ceil(limit / subredditList.length), 15), 100);
 
   for (const sub of subredditList) {
     try {
