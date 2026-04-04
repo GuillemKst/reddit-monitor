@@ -12,7 +12,9 @@ function parsePost(d) {
     author: d.author || '[deleted]',
     subreddit: d.subreddit,
     permalink: d.permalink || `/r/${d.subreddit}/comments/${d.id}/`,
-    url: `https://www.reddit.com/r/${d.subreddit}/comments/${d.id}/`,
+    url: d.permalink
+      ? `https://www.reddit.com${d.permalink}`
+      : `https://www.reddit.com/r/${d.subreddit}/comments/${d.id}/`,
     score: d.score || 0,
     numComments: d.num_comments || 0,
     redditCreatedAt: new Date((d.created_utc || d.created) * 1000),
