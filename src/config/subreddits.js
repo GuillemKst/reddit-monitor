@@ -9,8 +9,6 @@ const subreddits = {
     'marketing',
     'growthhacking',
     'digital_marketing',
-    'FacebookAds',
-    'PPC',
     'contentcreation',
     'videoediting',
     'ProductManagement',
@@ -19,12 +17,9 @@ const subreddits = {
   tier3: [
     'smallbusiness',
     'socialmedia',
-    'TikTokAds',
     'webdev',
     'OnlineBusiness',
     'freelance',
-    'DigitalNomad',
-    'Advertising',
   ],
 };
 

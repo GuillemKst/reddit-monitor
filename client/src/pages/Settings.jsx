@@ -24,8 +24,8 @@ export default function Settings() {
 
   const tiers = [
     { name: 'Tier 1 — High relevance', subs: ['SaaS', 'startups', 'Entrepreneur', 'SideProject'], freq: 'Every scan' },
-    { name: 'Tier 2 — Medium relevance', subs: ['marketing', 'growthhacking', 'digital_marketing', 'FacebookAds', 'PPC', 'contentcreation', 'videoediting', 'ProductManagement', 'IndieDev'], freq: 'Every 3rd scan' },
-    { name: 'Tier 3 — Niche', subs: ['smallbusiness', 'socialmedia', 'TikTokAds', 'webdev', 'OnlineBusiness', 'freelance', 'DigitalNomad', 'Advertising'], freq: 'Every 6th scan' },
+    { name: 'Tier 2 — Medium relevance', subs: ['marketing', 'growthhacking', 'digital_marketing', 'contentcreation', 'videoediting', 'ProductManagement', 'IndieDev'], freq: 'Every 3rd scan' },
+    { name: 'Tier 3 — Niche', subs: ['smallbusiness', 'socialmedia', 'webdev', 'OnlineBusiness', 'freelance'], freq: 'Every 6th scan' },
   ];
 
   return (
