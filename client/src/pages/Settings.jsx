@@ -23,9 +23,9 @@ export default function Settings() {
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 3000); }
 
   const tiers = [
-    { name: 'Tier 1 — High relevance', subs: ['SaaS', 'startups', 'Entrepreneur', 'SideProject', 'webdev', 'programming', 'reactjs', 'javascript'], freq: 'Every scan' },
-    { name: 'Tier 2 — Medium relevance', subs: ['ProductManagement', 'marketing', 'growthhacking', 'digital_marketing', 'youtubers', 'contentcreation', 'videoediting', 'productivity', 'remotework'], freq: 'Every 3rd scan' },
-    { name: 'Tier 3 — Niche', subs: ['DevTools', 'selfhosted', 'smallbusiness', 'freelance', 'NewTubers', 'MacApps', 'windows', 'software', 'AskTechnology', 'techsupport'], freq: 'Every 6th scan' },
+    { name: 'Tier 1 — High relevance', subs: ['SaaS', 'startups', 'Entrepreneur', 'SideProject'], freq: 'Every scan' },
+    { name: 'Tier 2 — Medium relevance', subs: ['marketing', 'growthhacking', 'digital_marketing', 'FacebookAds', 'PPC', 'contentcreation', 'videoediting', 'ProductManagement', 'IndieDev'], freq: 'Every 3rd scan' },
+    { name: 'Tier 3 — Niche', subs: ['smallbusiness', 'socialmedia', 'TikTokAds', 'webdev', 'OnlineBusiness', 'freelance', 'DigitalNomad', 'Advertising'], freq: 'Every 6th scan' },
   ];
 
   return (

@@ -1,5 +1,5 @@
 const { getSubredditTier } = require('../config/subreddits');
-const { containsKeyword, isQuestion, getTimeDiffMinutes } = require('../utils/text-analyzer');
+const { containsKeyword, isQuestion, getTimeDiffMinutes, isSelfPromotion } = require('../utils/text-analyzer');
 
 function calculateRelevanceScore(post, matchedKeywords) {
   let score = 0;
@@ -13,8 +13,8 @@ function calculateRelevanceScore(post, matchedKeywords) {
       score += 15;
     }
 
-    if (kw.category === 'competitor') score += 20;
-    else if (kw.category === 'pain_point') score += 15;
+    if (kw.category === 'pain_point') score += 15;
+    else if (kw.category === 'question') score += 10;
   }
 
   const ageMinutes = getTimeDiffMinutes(post.redditCreatedAt || post.created_utc * 1000);
@@ -28,7 +28,11 @@ function calculateRelevanceScore(post, matchedKeywords) {
 
   if (isQuestion(title)) score += 5;
 
-  return Math.min(score, 100);
+  const promoLevel = isSelfPromotion(title, body);
+  if (promoLevel === 'strong') score -= 60;
+  else if (promoLevel === 'weak') score -= 25;
+
+  return Math.max(0, Math.min(score, 100));
 }
 
 module.exports = { calculateRelevanceScore };
