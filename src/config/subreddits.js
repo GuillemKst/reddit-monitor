@@ -1,42 +1,30 @@
 const subreddits = {
   tier1: [
-    // Builders & SaaS — máxima relevancia
     'SaaS',
     'startups',
     'Entrepreneur',
     'SideProject',
-    // Developers — buscan herramientas activamente
-    'webdev',
-    'programming',
-    'reactjs',
-    'javascript',
   ],
   tier2: [
-    // Product & Marketing
-    'ProductManagement',
     'marketing',
     'growthhacking',
     'digital_marketing',
-    // Creators
-    'youtubers',
+    'FacebookAds',
+    'PPC',
     'contentcreation',
     'videoediting',
-    // Productivity & Remote
-    'productivity',
-    'remotework',
+    'ProductManagement',
+    'IndieDev',
   ],
   tier3: [
-    // Más nicho pero valioso
-    'DevTools',
-    'selfhosted',
     'smallbusiness',
+    'socialmedia',
+    'TikTokAds',
+    'webdev',
+    'OnlineBusiness',
     'freelance',
-    'NewTubers',
-    'MacApps',
-    'windows',
-    'software',
-    'AskTechnology',
-    'techsupport',
+    'DigitalNomad',
+    'Advertising',
   ],
 };
 
